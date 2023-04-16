@@ -8,17 +8,13 @@ namespace Blog
 {
     public class Program
     {
-        private static string CONNECTION_STRING_ID = Environment.GetEnvironmentVariable("CONNECTION_STRING_SQL_SERVER_ID", EnvironmentVariableTarget.Machine);
-        private static string CONNECTION_STRING_PASSWORD = Environment.GetEnvironmentVariable("CONNECTION_STRING_SQL_SERVER_PASSWORD", EnvironmentVariableTarget.Machine);
-        private static string connectionString = @$"Server=localhost, 1433;Database=Blog;User ID={CONNECTION_STRING_ID};Password={CONNECTION_STRING_PASSWORD};TrustServerCertificate=True";
-
         private static BlogDataContext _context;
 
         static void Main(string[] args)
         {
-            _context = new BlogDataContext(connectionString);
+            _context = new BlogDataContext();
 
-            ReadUsers();
+            ReadTags();
             Console.ReadKey();
         }
 
@@ -27,6 +23,14 @@ namespace Blog
             var tag = new Tag { Name = "ASP.NET", Slug = "aspnet" };
 
             _context.Tags.Add(tag);
+            _context.SaveChanges();
+        }
+
+        static void CreateCategory()
+        {
+            var category = new Category { Name = "NET", Slug = "net" };
+
+            _context.Categories.Add(category);
             _context.SaveChanges();
         }
 
@@ -60,11 +64,17 @@ namespace Blog
         {
             var users = _context.Users
                 .AsNoTracking()
+                .Include(x => x.Roles)
                 .ToList();
 
             foreach (var item in users)
             {
-                Console.WriteLine($"{item.Id} - {item.Name} - {item.Slug}");
+                Console.WriteLine($"-> {item.Id} - {item.Name} - {item.Slug}");
+
+                foreach (var role in item?.Roles)
+                {
+                    Console.WriteLine($"--> {role.Id} - {role.Name} - {role.Slug}");
+                }
             }
         }
 
